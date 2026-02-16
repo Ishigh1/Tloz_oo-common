@@ -1,7 +1,7 @@
 import collections
 import re
 
-from Errors import ArgumentOverflowError
+from .Errors import ArgumentOverflowError
 
 
 def strip_line(line: str) -> str:

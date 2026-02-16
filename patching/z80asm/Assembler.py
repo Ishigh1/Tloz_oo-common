@@ -1,5 +1,5 @@
 from copy import copy
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 
 from .Errors import *
 from .MnemonicsTree import MNEMONICS
