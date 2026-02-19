@@ -77,10 +77,11 @@ class RomData:
         else:
             raise ValueError(f"Invalid ROM size: {hex(len(self.file))}")
 
-    def get_chest_addr(self, group_and_room: int, bank, table_addr):
+    def get_chest_addr(self, group_and_room: int, bank: int, table_addr: int) -> int:
         """
         Return the address where to edit item ID and sub-ID to modify the contents
         of the chest contained in given room of given group
+        The required bank and address parameters point to chestDataGroupTable
         """
         base_addr = GameboyAddress(bank, table_addr).address_in_rom()
         room = group_and_room & 0xFF
