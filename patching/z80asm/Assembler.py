@@ -23,6 +23,12 @@ class GameboyAddress:
             mapped_offset += 0x4000
         return f"${hex_str(mapped_offset, 2)}"
 
+    def __str__(self) -> str:
+        mapped_offset = self.offset
+        if self.bank > 0:
+            mapped_offset += 0x4000
+        return f"{hex_str(self.bank, 1)}:{hex_str(mapped_offset, 2)}"
+
 
 class Z80Block:
     local_labels: Dict[str, GameboyAddress]
@@ -203,7 +209,15 @@ class Z80Assembler:
         current_offset = 0
         for line in block.content_lines:
             addr = GameboyAddress(block.addr.bank, block.addr.offset + current_offset)
-            current_offset += self._evaluate_line_size(line, addr, block)
+            try:
+                current_offset += self._evaluate_line_size(line, addr, block)
+            except Exception as e:
+                e.add_note(f"line: {line}")
+                block_name = block.label
+                if not block_name:
+                    block_name = "unnamed"
+                e.add_note(f"In block {block_name} ({block.addr})")
+                raise e
         assert self.active
         block.precompiled_size = current_offset
 
@@ -211,7 +225,15 @@ class Z80Assembler:
         block.byte_array = []
         for line in block.content_lines:
             addr = GameboyAddress(block.addr.bank, block.addr.offset + len(block.byte_array))
-            block.byte_array.extend(self._compile_line_to_bytes(line, addr, block))
+            try:
+                block.byte_array.extend(self._compile_line_to_bytes(line, addr, block))
+            except Exception as e:
+                e.add_note(f"Line: {line}")
+                block_name = block.label
+                if not block_name:
+                    block_name = "unnamed"
+                e.add_note(f"In block {block_name} ({block.addr})")
+                raise e
 
         if block.precompiled_size != len(block.byte_array):
             raise Exception(f"Block {block.label} size prediction was wrong: "
