@@ -9,6 +9,12 @@ from ..text.decoding import parse_text_dict, parse_all_texts
 def load_vanilla_dict_data(seasons: bool) -> None | dict[str, str]:
     """
     Gets the vanilla dict, this is always assumed to already exist
+
+    Parameters:
+        seasons (bool): Gets the dict from seasons if true, otherwise ages.
+
+    Returns:
+        dict[str, str]: A dictonary full of things from a game.
     """
     game_name = "seasons" if seasons else "ages"
 
@@ -18,6 +24,15 @@ def load_vanilla_dict_data(seasons: bool) -> None | dict[str, str]:
 
 
 def load_vanilla_text_data(seasons: bool) -> None | dict[str, str]:
+    """
+    Gets the vanilla text data.
+
+    Parameters:
+        seasons (bool): Gets the text from from seasons if true, otherwise ages.
+
+    Returns:
+        dict[str, str]: A text from a game.
+    """
     game_name = "seasons" if seasons else "ages"
 
     text_dir = Path(Utils.cache_path("oos_ooa/text"))
@@ -30,6 +45,14 @@ def load_vanilla_text_data(seasons: bool) -> None | dict[str, str]:
 def save_vanilla_text_data(dictionary: dict[str, str],
                            texts: dict[str, str],
                            seasons: bool) -> None:
+    """
+    Saves the vanilla text data somewhere.
+
+    Parameters:
+        dictionary (dict[str, str]): The directory to work with.
+        texts ([dict[str, str]]): A list of texts that will be saved.
+        seasons (bool): Saves the text from from seasons if true, otherwise ages.
+    """
     text_dir = Path(Utils.cache_path("oos_ooa/text"))
     text_dir.mkdir(parents=True, exist_ok=True)
 
@@ -45,6 +68,17 @@ def save_vanilla_text_data(dictionary: dict[str, str],
 
 
 def get_text_data(rom_data: RomData, get_dictionary: bool, seasons: bool) -> tuple[None | dict[str, str], dict[str, str]]:
+    """
+    Gets the text data.
+
+    Parameters:
+        rom_data (RomData): Data of a rom that was loaded.
+        get_dictionary (bool): A boolean which tells this function whatever nor not to get the dictionary of the text.
+        seasons (bool): True if the rom that is loaded is called The Legend of Zelda: Oracle of Seasons, If so, then this function will behave differently.
+
+    Returns:
+        dict[str, str]: A text from a game.
+    """
     result = load_vanilla_text_data(seasons)
     if result is not None:
         if get_dictionary:

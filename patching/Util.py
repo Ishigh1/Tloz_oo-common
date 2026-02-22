@@ -1,4 +1,13 @@
 def camel_case(text):
+    """
+    Replaces minuses or understores with spaces and upercases all but the first letter of a word.
+
+    Parameters:
+        text (str): The text to work with.
+
+    Returns:
+        str: The completed text.
+    """
     if len(text) == 0:
         return text
     s = text.replace("-", " ").replace("_", " ").split()
@@ -6,6 +15,15 @@ def camel_case(text):
 
 
 def convert_value_to_digits(value: int):
+    """
+    Converts a value into digits.
+
+    Parameters:
+        value (int): A value to work with.
+
+    Returns:
+        list: digits that were made during the conversion.
+    """
     digits = []
     while value > 0:
         digits.append(0x30 + (value % 10))
@@ -18,11 +36,17 @@ def convert_value_to_digits(value: int):
 
 def get_available_random_colors_from_sprite_name(sprite_filename: str):
     """
-    Parse the sprite filename to detect a potential "accepted colors suffix" which uses the following format:
+    Parses the sprite filename to detect a potential "accepted colors suffix" which uses the following format:
     mysrite_<COLORS>.bin, where COLORS is a set of letters representing which colors can be rolled as random colors
     for that sprite.
-    This was built for people who play with both random sprite & random color, but who want a subset of colors for
+    This was built for people who play with both random sprite & random color, who wants a subset of colors for
     each sprite (e.g. if they play a Tokay, they only want it orange or red).
+
+    Parameters:
+        sprite_filename (str): The name of the sprite to load.
+    
+    Returns:
+        list: Returns a list of available colors for a user's sprite.
     """
     CHARACTER_COLORS = {
         "r": "red",
@@ -42,5 +66,14 @@ def get_available_random_colors_from_sprite_name(sprite_filename: str):
     return [color for letter, color in CHARACTER_COLORS.items() if letter in suffix]
 
 
-def simple_hex(num: int, size: int = 2) -> str:
+def simple_hex(num: int) -> str:
+    """
+    Gets a hex string from a number
+
+    Parameters:
+        num (int) A number that will be converted into a hex string.
+
+    Returns:
+        str: Hex from the given number.
+    """
     return hex(num)[2:].rjust(2, "0")
