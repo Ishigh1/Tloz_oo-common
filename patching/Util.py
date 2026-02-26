@@ -1,11 +1,11 @@
-def camel_case(text):
+def camel_case(text: str) -> str:
     if len(text) == 0:
         return text
     s = text.replace("-", " ").replace("_", " ").split()
     return s[0] + "".join(i.capitalize() for i in s[1:])
 
 
-def convert_value_to_digits(value: int):
+def convert_value_to_digits(value: int) -> list[int]:
     digits = []
     while value > 0:
         digits.append(0x30 + (value % 10))
@@ -16,7 +16,7 @@ def convert_value_to_digits(value: int):
     return list(reversed(digits))
 
 
-def get_available_random_colors_from_sprite_name(sprite_filename: str):
+def get_available_random_colors_from_sprite_name(sprite_filename: str) -> list[str]:
     """
     Parse the sprite filename to detect a potential "accepted colors suffix" which uses the following format:
     mysrite_<COLORS>.bin, where COLORS is a set of letters representing which colors can be rolled as random colors
@@ -30,6 +30,7 @@ def get_available_random_colors_from_sprite_name(sprite_filename: str):
         "b": "blue",
         "o": "orange",
     }
+
     filename_parts = sprite_filename.split("_")
     if len(filename_parts) <= 1:
         return list(CHARACTER_COLORS.values())
