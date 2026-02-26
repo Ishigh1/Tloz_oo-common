@@ -8,15 +8,31 @@ from .Util import *
 
 class GameboyAddress:
     def __init__(self, bank: int, offset: int):
+        """
+        Loads up a memory address for management.
+
+        Parameters:
+            bank (int): The address of a memory bank
+            offset (int): An address to work with from the memory bank.
+        """
         self.bank = bank
         self.offset = offset - 0x4000 if 0x8000 > offset >= 0x4000 else offset
         assert self.offset < 0x4000 or self.offset >= 0xffff, f"Offset out of range: {offset}"
 
     def address_in_rom(self) -> int:
+        """
+        Converts the loaded memory addresses into something used for a ROM.
+
+        Returns:
+            byte: A memory address for a ROM.
+        """
         assert self.offset != 0xffff, "Tried to get the address of a floating chunk"
         return (self.bank * 0x4000) + self.offset
 
     def to_word(self) -> str:
+        """
+        Converts a Memory Address into a word.
+        """
         assert self.offset != 0xffff, "Tried to get the address of a floating chunk"
         mapped_offset = self.offset
         if self.bank > 0:
