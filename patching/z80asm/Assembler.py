@@ -25,7 +25,7 @@ class GameboyAddress:
 
     def __str__(self) -> str:
         mapped_offset = self.offset
-        if self.bank > 0:
+        if self.bank > 0 and mapped_offset != 0xffff:
             mapped_offset += 0x4000
         return f"{hex_str(self.bank, 1)}:{hex_str(mapped_offset, 2)}"
 
@@ -149,7 +149,7 @@ class Z80Assembler:
                 raise Exception(f"Not enough space for block {block.label} in bank {hex_str(block.addr.bank)} "
                                 f"({hex(injection_offset + block.precompiled_size)})."
                                 f"Block size: {hex(block.precompiled_size)}; "
-                                f"Space left: {hex((sum([cave_range[1] - cave_range[0] + 1 for cave_range in self.bank_caves[block.addr.bank]]) if isinstance(self.bank_caves[block.addr.bank], list) else 0) + 0x4001 - injection_offset)}")
+                                f"Space left: {hex((sum([(0x4000 - cave_range if isinstance(cave_range, int) else cave_range[1] - cave_range[0] + 1) for cave_range in self.bank_caves[block.addr.bank]]) if isinstance(self.bank_caves[block.addr.bank], list) else 0) + 0x4001 - injection_offset)}")
             block.set_base_offset(injection_offset)
 
         if block.label:
