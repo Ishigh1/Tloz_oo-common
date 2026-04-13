@@ -327,7 +327,7 @@ class Z80Assembler:
             return len(self.floating_chunks[args[0]])
         if opcode == "/copy":
             return parse_hex_string_to_value(args[3])
-        if opcode == "db":
+        if opcode == "db" or opcode == "dbe":
             return len(args)
         if opcode == "dw" or opcode == "dwbe":
             return len(args) * 2
@@ -405,6 +405,9 @@ class Z80Assembler:
         if opcode == "db":
             # Declare byte
             return [parse_byte(arg) for arg in args]
+        if opcode == "dbe":
+            # Declare byte
+            return [parse_byte(arg) for arg in reversed(args)]
         if opcode == "dw":
             # Declare word
             return [b for arg in args for b in parse_hex_word(arg)]
