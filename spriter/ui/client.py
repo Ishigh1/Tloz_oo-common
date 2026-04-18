@@ -53,7 +53,7 @@ class ImageApp(MDApp):
         return layout
 
     def load_link(self, *_) -> None:
-        file_name = str(self.sprite_folder.joinpath("link.png"))
+        file_name = str(self.sprite_folder.joinpath("link.bmp"))
 
         settings = get_settings()
         if hasattr(settings, "tloz_oos_options"):
@@ -73,12 +73,12 @@ class ImageApp(MDApp):
 
     def load_sprite(self, *_) -> None:
         file_name = Utils.open_filename(
-            "Select sprite file", (("*", (".bin", ".png")), ("Binary", (".bin",)), ("Image", (".png",)))
+            "Select sprite file", (("*", (".bin", ".bmp")), ("Binary", (".bin",)), ("Image", (".bmp",)))
         )
         if not file_name:
             return
 
-        new_file_name = str(self.sprite_folder.joinpath(f"{Path(file_name).stem}.png"))
+        new_file_name = str(self.sprite_folder.joinpath(f"{Path(file_name).stem}.bmp"))
         if file_name.endswith(".bin"):
             image = load_link_sprite(Path(file_name).read_bytes())
             image.palette = link_palette
@@ -131,7 +131,7 @@ class ImageApp(MDApp):
             return
 
         image_name = Path(self.img.source).stem
-        file_path = Utils.save_filename("Save sprite file", (("PNG", (".png",)),), f"{image_name}.png")
+        file_path = Utils.save_filename("Save sprite file", (("BMP", (".bmp",)),), f"{image_name}.bmp")
         if not file_path:
             return
         shutil.copy(self.img.source, file_path)
