@@ -1,4 +1,4 @@
-import kvui  # noqa: F401 isort: skip
+import kvui  # noqa: F401 # isort: skip
 
 import os
 import shutil
@@ -15,7 +15,7 @@ from settings import get_settings
 
 from ...patching.RomData import RomData
 from ..microbmp import MicroBMP
-from ..sprite import bw_palette, link_palette
+from ..sprite import blue_palette, bw_palette, green_palette, orange_palette, red_palette
 from ..sprite.decoding import load_link_data, load_link_sprite
 from ..sprite.encoding import encode_sprite, has_separator, remap_sprite
 
@@ -40,16 +40,17 @@ class ImageApp(MDApp):
 
         bar = BoxLayout(orientation="horizontal", size_hint_y=None, height=48)
         bar.add_widget(MDButton(MDButtonText(text="Load Link"), on_release=self.load_link))
-        bar.add_widget(MDButton(MDButtonText(text="Load Sprite"), on_release=self.load_sprite))
+        bar.add_widget(MDButton(MDButtonText(text="Load Last Sprite"), on_release=self.load_last))
+        bar.add_widget(MDButton(MDButtonText(text="Load Sprite..."), on_release=self.load_sprite))
         bar.add_widget(MDButton(MDButtonText(text="Switch Palette"), on_release=self.switch_palette))
         bar.add_widget(MDButton(MDButtonText(text="Switch Separator"), on_release=self.switch_separator))
-        bar.add_widget(MDButton(MDButtonText(text="Export Image"), on_release=self.export_image))
-        bar.add_widget(MDButton(MDButtonText(text="Export Binary"), on_release=self.export_binary))
         layout.add_widget(bar)
 
-        bar2 = BoxLayout(orientation="horizontal", size_hint_y=None, height=48)
-        bar2.add_widget(MDButton(MDButtonText(text="Select sprite as default"), on_release=self.select_sprite))
-        layout.add_widget(bar2)
+        bar = BoxLayout(orientation="horizontal", size_hint_y=None, height=48)
+        bar.add_widget(MDButton(MDButtonText(text="Export Image"), on_release=self.export_image))
+        bar.add_widget(MDButton(MDButtonText(text="Export Binary"), on_release=self.export_binary))
+        bar.add_widget(MDButton(MDButtonText(text="Select sprite as default"), on_release=self.select_sprite))
+        layout.add_widget(bar)
         return layout
 
     def load_link(self, *_) -> None:
@@ -63,7 +64,7 @@ class ImageApp(MDApp):
         rom = RomData(bytes(open(rom_file, "rb").read()))
         sprite_data = load_link_data(rom)
         image = load_link_sprite(sprite_data)
-        image.palette = link_palette
+        image.palette = green_palette
         image.save(file_name)
 
         self.img.source = file_name
@@ -71,26 +72,35 @@ class ImageApp(MDApp):
         self.img.texture.mag_filter = "nearest"  # prevents blur when scaling up
         self.img.texture.min_filter = "nearest"  # prevents blur when scaling down
 
-    def load_sprite(self, *_) -> None:
-        file_name = Utils.open_filename(
-            "Select sprite file", (("*", (".bin", ".bmp")), ("Binary", (".bin",)), ("Image", (".bmp",)))
-        )
-        if not file_name:
-            return
-
-        new_file_name = str(self.sprite_folder.joinpath(f"{Path(file_name).stem}.bmp"))
-        if file_name.endswith(".bin"):
-            image = load_link_sprite(Path(file_name).read_bytes())
-            image.palette = link_palette
+    def load_sprite_from_path(self, path: str):
+        new_file_name = str(self.sprite_folder.joinpath(f"{Path(path).stem}.bmp"))
+        if path.endswith(".bin"):
+            image = load_link_sprite(Path(path).read_bytes())
+            image.palette = green_palette
             image.save(new_file_name)
         else:
-            image = MicroBMP().load(file_name)
+            image = MicroBMP().load(path)
             remap_sprite(image)
             image.save(new_file_name)
         self.img.source = new_file_name
         self.img.reload()
         self.img.texture.mag_filter = "nearest"  # prevents blur when scaling up
         self.img.texture.min_filter = "nearest"  # prevents blur when scaling down
+
+    def load_last(self, *_) -> None:
+        sprites = self.sprite_folder.glob("*.bmp")
+        latest_file = max(sprites, key=os.path.getmtime, default=None)
+        if latest_file is None:
+            return
+        self.load_sprite_from_path(str(latest_file))
+
+    def load_sprite(self, *_) -> None:
+        file_name = Utils.open_filename(
+            "Select sprite file", (("*", (".bin", ".bmp")), ("Binary", (".bin",)), ("Image", (".bmp",)))
+        )
+        if not file_name:
+            return
+        self.load_sprite_from_path(file_name)
 
     def switch_palette(self, *_) -> None:
         if self.img.source == "":
@@ -99,7 +109,13 @@ class ImageApp(MDApp):
         image = MicroBMP().load(self.img.source)
         remap_sprite(image)
         if image.palette == bw_palette:
-            image.palette = link_palette
+            image.palette = green_palette
+        elif image.palette == green_palette:
+            image.palette = blue_palette
+        elif image.palette == blue_palette:
+            image.palette = red_palette
+        elif image.palette == red_palette:
+            image.palette = orange_palette
         else:
             image.palette = bw_palette
         image.save(self.img.source)
@@ -113,11 +129,7 @@ class ImageApp(MDApp):
 
         image = MicroBMP().load(self.img.source)
         remap_sprite(image)
-        if image.palette == bw_palette:
-            palette = bw_palette
-        else:
-            palette = link_palette
-
+        palette = image.palette
         encoded = encode_sprite(image)
         image = load_link_sprite(encoded, not has_separator(image))
         image.palette = palette
@@ -169,11 +181,26 @@ class ImageApp(MDApp):
         with open(file_path, "wb") as f:
             f.write(encoded)
 
+        palette_name: str | None
+        if image.palette == green_palette:
+            palette_name = "green"
+        elif image.palette == blue_palette:
+            palette_name = "blue"
+        elif image.palette == red_palette:
+            palette_name = "red"
+        elif image.palette == orange_palette:
+            palette_name = "orange"
+        else:
+            palette_name = None
         settings = get_settings()
         if hasattr(settings, "tloz_oos_options"):
             settings.tloz_oos_options.character_sprite = image_name
+            if palette_name is not None:
+                settings.tloz_oos_options.character_palette = palette_name
             settings.tloz_oos_options._changed = True
 
         if hasattr(settings, "tloz_ooa_options"):
             settings.tloz_ooa_options.character_sprite = image_name
+            if palette_name is not None:
+                settings.tloz_ooa_options.character_palette = palette_name
             settings.tloz_ooa_options._changed = True

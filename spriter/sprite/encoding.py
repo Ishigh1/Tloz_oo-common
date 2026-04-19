@@ -3,7 +3,7 @@ from typing import cast
 
 from worlds.tloz_oos.common.spriter.microbmp import MicroBMP
 
-from . import bw_palette, link_palette
+from . import blue_palette, bw_palette, green_palette, orange_palette, red_palette
 
 
 def has_separator(image: MicroBMP) -> bool:
@@ -54,7 +54,7 @@ def encode_sprite(image: MicroBMP) -> bytearray:
 
 def remap_sprite(image: MicroBMP) -> None:
     image_palette = cast(list[bytearray], image.palette)
-    candidate_palettes = [bw_palette, link_palette]
+    candidate_palettes = [bw_palette, green_palette, blue_palette, red_palette, orange_palette]
     mapping_attempt: dict[int, tuple[int, list[int]]] = {key: (0, []) for key in range(len(candidate_palettes))}
     for palette_color in image_palette:
         for palette_id in range(len(candidate_palettes)):
