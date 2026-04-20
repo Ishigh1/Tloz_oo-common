@@ -163,7 +163,7 @@ class MicroBMP(object):
         if self.DIB_depth <= 8:
             return self._extract_from_bytes(self.parray, pindex)
         else:
-            pindex *= 3
+            pindex *= self.DIB_depth // 8
             if (len(key) > 2) and (key[2] in (0, 1, 2)):
                 return self.parray[pindex + key[2]]
             else:
@@ -182,13 +182,15 @@ class MicroBMP(object):
         if self.DIB_depth <= 8:
             self._fill_in_bytes(self.parray, pindex, value)
         else:
-            pindex *= 3
+            pindex *= self.DIB_depth // 8
             if (len(key) > 2) and (key[2] in (0, 1, 2)):
                 self.parray[pindex + key[2]] = value
             else:
                 self.parray[pindex] = value[0]
                 self.parray[pindex + 1] = value[1]
                 self.parray[pindex + 2] = value[2]
+            if self.DIB_depth == 32:
+                self.parray[pindex + 3] = 0xFF
 
     def __str__(self):
         if not self.initialised:
@@ -247,7 +249,7 @@ class MicroBMP(object):
                 div, mod = divmod(self.DIB_w * self.DIB_h, self.ppb)
                 self.parray = bytearray(div + (1 if mod else 0))
             else:
-                self.parray = bytearray(self.DIB_w * self.DIB_h * 3)
+                self.parray = bytearray(self.DIB_w * self.DIB_h * self.DIB_depth // 8)
 
         plt_size = self.DIB_num_in_plt * 4
         self.BMP_offset = 14 + self.DIB_len + plt_size
@@ -378,7 +380,7 @@ class MicroBMP(object):
                     if self.DIB_depth <= 8:
                         self[x, y] = self._extract_from_bytes(data, x)
                     else:
-                        v = x * 3
+                        v = x * self.DIB_depth // 8
                         # BMP colour is in BGR order.
                         self[x, y] = (data[v + 2], data[v + 1], data[v])
         else:
