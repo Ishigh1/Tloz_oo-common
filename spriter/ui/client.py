@@ -193,13 +193,13 @@ class ImageApp(MDApp):
         else:
             palette_name = None
         settings = get_settings()
-        if hasattr(settings, "tloz_oos_options"):
+        if hasattr(settings, "tloz_oos_options") and not isinstance(settings.tloz_oos_options, dict):
             settings.tloz_oos_options.character_sprite = image_name
             if palette_name is not None:
                 settings.tloz_oos_options.character_palette = palette_name
             settings.tloz_oos_options._changed = True
 
-        if hasattr(settings, "tloz_ooa_options"):
+        if hasattr(settings, "tloz_ooa_options") and not isinstance(settings.tloz_ooa_options, dict):
             settings.tloz_ooa_options.character_sprite = image_name
             if palette_name is not None:
                 settings.tloz_ooa_options.character_palette = palette_name

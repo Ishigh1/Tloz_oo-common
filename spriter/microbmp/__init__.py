@@ -208,35 +208,27 @@ class MicroBMP(object):
             return self.initialised
 
         assert self.BMP_id == b"BM", "BMP id ({}) must be b'BM'!".format(self.BMP_id)
-        assert (
-            len(self.BMP_reserved1) == 2 and len(self.BMP_reserved2) == 2
-        ), "Length of BMP reserved fields ({}+{}) must be 2+2!".format(
-            len(self.BMP_reserved1), len(self.BMP_reserved2)
+        assert len(self.BMP_reserved1) == 2 and len(self.BMP_reserved2) == 2, (
+            "Length of BMP reserved fields ({}+{}) must be 2+2!".format(
+                len(self.BMP_reserved1), len(self.BMP_reserved2)
+            )
         )
-        assert self.DIB_planes_num == 1, "DIB planes number ({}) must be 1!".format(
-            self.DIB_planes_num
+        assert self.DIB_planes_num == 1, "DIB planes number ({}) must be 1!".format(self.DIB_planes_num)
+        assert self.DIB_depth in (1, 2, 4, 8, 24, 32), "Colour depth ({}) must be in (1, 2, 4, 8, 24, 32)!".format(
+            self.DIB_depth
         )
-        assert self.DIB_depth in (
-            1,
-            2,
-            4,
-            8,
-            24,
-        ), "Colour depth ({}) must be in (1, 2, 4, 8, 24)!".format(self.DIB_depth)
         assert (
             self.DIB_comp == 0
             or (self.DIB_depth == 8 and self.DIB_comp == 1)
             or (self.DIB_depth == 4 and self.DIB_comp == 2)
-        ), "Colour depth + compression ({}+{}) must be X+0/8+1/4+2!".format(
-            self.DIB_depth, self.DIB_comp
-        )
+        ), "Colour depth + compression ({}+{}) must be X+0/8+1/4+2!".format(self.DIB_depth, self.DIB_comp)
 
         if self.DIB_depth <= 8:
             self.ppb = 8 // self.DIB_depth
             self.pmask = 0xFF >> (8 - self.DIB_depth)
             if self.palette is None:
                 # Default palette is black and white or full size grey scale.
-                self.DIB_num_in_plt = 2 ** self.DIB_depth
+                self.DIB_num_in_plt = 2**self.DIB_depth
                 self.palette = [None for i in range(self.DIB_num_in_plt)]
                 for i in range(self.DIB_num_in_plt):
                     # Assignment that suits all: 1/2/4/8-bit colour depth.
@@ -285,9 +277,7 @@ class MicroBMP(object):
         byte_index, pos_in_byte = divmod(index, self.ppb)
         shift = 8 - self.DIB_depth * (pos_in_byte + 1)
         value &= self.pmask
-        data[byte_index] = (data[byte_index] & ~(self.pmask << shift)) + (
-            value << shift
-        )
+        data[byte_index] = (data[byte_index] & ~(self.pmask << shift)) + (value << shift)
 
     def _decode_rle(self, bf_io):
         # Only bottom-up bitmap can be compressed.
@@ -359,7 +349,7 @@ class MicroBMP(object):
         # Palette
         if self.DIB_depth <= 8:
             if DIB_plt_num_info == 0:
-                self.DIB_num_in_plt = 2 ** self.DIB_depth
+                self.DIB_num_in_plt = 2**self.DIB_depth
             else:
                 self.DIB_num_in_plt = DIB_plt_num_info
             self.palette = [None for i in range(self.DIB_num_in_plt)]
@@ -469,11 +459,7 @@ class MicroBMP(object):
                         d = 0
                 if x % self.ppb != self.ppb - 1:
                     # Last byte if width does not fit in whole bytes.
-                    d <<= (
-                        8
-                        - self.DIB_depth
-                        - (x % self.ppb) * (2 ** (self.DIB_depth - 1))
-                    )
+                    d <<= 8 - self.DIB_depth - (x % self.ppb) * (2 ** (self.DIB_depth - 1))
                     bf_io.write(bytes([d]))
                     d = 0
             else:
@@ -501,6 +487,7 @@ class MicroBMP(object):
         """
         with open(file_path, "rb") as file:
             self.read_io(file)
+        self.convert_to_paletted()
         return self
 
     def save(self, file_path, force_40B_DIB=False):
@@ -522,3 +509,28 @@ class MicroBMP(object):
         with open(file_path, "wb") as file:
             num_of_bytes = self.write_io(file, force_40B_DIB)
         return num_of_bytes
+
+    def convert_to_paletted(self):
+        if self.DIB_depth <= 8:
+            return self
+
+        new_palette = []
+        color_mapping = {}
+        new_data = bytearray()
+        for y in range(self.DIB_h):
+            for x in range(self.DIB_w):
+                color = self[x, y]
+                if color in color_mapping:
+                    new_data.append(color_mapping[color])
+                else:
+                    new_color = len(new_palette)
+                    new_palette.append(color)
+                    color_mapping[color] = new_color
+                    new_data.append(new_color)
+        self.palette = new_palette
+        self.parray = new_data
+        self.DIB_depth = 8
+        self.DIB_comp = 0
+        self.initialised = False
+        self._init()
+        return self
