@@ -28,10 +28,11 @@ async def main() -> None:
     ImageApp().run()
 
 
+oos_button_text = "Select sprite for OoS"
+sprite_cache_folder = Path(Utils.cache_path("oos_ooa/sprites"))
 class ImageApp(MDApp):
     def build(self):
-        self.sprite_folder = Path(Utils.cache_path("oos_ooa/sprites"))
-        self.sprite_folder.mkdir(parents=True, exist_ok=True)
+        sprite_cache_folder.mkdir(parents=True, exist_ok=True)
 
         layout = BoxLayout(orientation="vertical")
 
@@ -49,12 +50,18 @@ class ImageApp(MDApp):
         bar = BoxLayout(orientation="horizontal", size_hint_y=None, height=48)
         bar.add_widget(MDButton(MDButtonText(text="Export Image"), on_release=self.export_image))
         bar.add_widget(MDButton(MDButtonText(text="Export Binary"), on_release=self.export_binary))
-        bar.add_widget(MDButton(MDButtonText(text="Select sprite as default"), on_release=self.select_sprite))
+        settings = get_settings()
+        if hasattr(settings, "tloz_oos_options") and not isinstance(settings.tloz_oos_options, dict):
+            # OoS is loaded
+            bar.add_widget(MDButton(MDButtonText(text=oos_button_text), on_release=self.select_sprite))
+        if hasattr(settings, "tloz_ooa_options") and not isinstance(settings.tloz_ooa_options, dict):
+            # OoA is loaded
+            bar.add_widget(MDButton(MDButtonText(text="Select sprite for OoA"), on_release=self.select_sprite))
         layout.add_widget(bar)
         return layout
 
     def load_link(self, *_) -> None:
-        file_name = str(self.sprite_folder.joinpath("link.bmp"))
+        file_name = str(sprite_cache_folder.joinpath("link.bmp"))
 
         settings = get_settings()
         if hasattr(settings, "tloz_oos_options"):
@@ -73,7 +80,7 @@ class ImageApp(MDApp):
         self.img.texture.min_filter = "nearest"  # prevents blur when scaling down
 
     def load_sprite_from_path(self, path: str):
-        new_file_name = str(self.sprite_folder.joinpath(f"{Path(path).stem}.bmp"))
+        new_file_name = str(sprite_cache_folder.joinpath(f"{Path(path).stem}.bmp"))
         if path.endswith(".bin"):
             image = load_link_sprite(Path(path).read_bytes())
             image.palette = green_palette
@@ -88,7 +95,7 @@ class ImageApp(MDApp):
         self.img.texture.min_filter = "nearest"  # prevents blur when scaling down
 
     def load_last(self, *_) -> None:
-        sprites = self.sprite_folder.glob("*.bmp")
+        sprites = sprite_cache_folder.glob("*.bmp")
         latest_file = max(sprites, key=os.path.getmtime, default=None)
         if latest_file is None:
             return
@@ -164,9 +171,11 @@ class ImageApp(MDApp):
         with open(file_path, "wb") as f:
             f.write(encoded)
 
-    def select_sprite(self, *_) -> None:
+    def select_sprite(self, *args) -> None:
         if self.img.source == "":
             return
+        button_label = args[0].children[0].text
+        seasons = button_label == oos_button_text
         image = MicroBMP().load(self.img.source)
         remap_sprite(image)
         encoded = encode_sprite(image)
@@ -193,13 +202,13 @@ class ImageApp(MDApp):
         else:
             palette_name = None
         settings = get_settings()
-        if hasattr(settings, "tloz_oos_options") and not isinstance(settings.tloz_oos_options, dict):
+        if seasons and hasattr(settings, "tloz_oos_options") and not isinstance(settings.tloz_oos_options, dict):
             settings.tloz_oos_options.character_sprite = image_name
             if palette_name is not None:
                 settings.tloz_oos_options.character_palette = palette_name
             settings.tloz_oos_options._changed = True
 
-        if hasattr(settings, "tloz_ooa_options") and not isinstance(settings.tloz_ooa_options, dict):
+        if not seasons and hasattr(settings, "tloz_ooa_options") and not isinstance(settings.tloz_ooa_options, dict):
             settings.tloz_ooa_options.character_sprite = image_name
             if palette_name is not None:
                 settings.tloz_ooa_options.character_palette = palette_name
