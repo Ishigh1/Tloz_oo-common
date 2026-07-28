@@ -122,7 +122,7 @@ def next_character(text: str, index: int) -> tuple[str | tuple[str, int], int]:
         if text.startswith(f"\\{name}", index):
             return name, 1 + len(name)
 
-    raise Exception
+    raise Exception("Unrecognized command, text may not have been sanitized")
 
 class TrieNode:
     def __init__(self) -> None:
