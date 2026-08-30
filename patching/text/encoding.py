@@ -289,9 +289,9 @@ def write_text_data(rom: RomData, dictionary: dict[str, str], texts: dict[str, s
         sorted_dict = sorted(list(encoded_dict1.items()) + list(encoded_dict2.items()), key=lambda kv: -len(kv[1]))
         for entry in sorted_dict:
             if entry[0] in dict1:
-                print(entry[0], dict1[entry[0]], len(entry[1]))
+                logging.info(entry[0], dict1[entry[0]], len(entry[1]))
             elif entry[0] in dict2:
-                print(entry[0], dict2[entry[0]], len(entry[1]))
+                logging.info(entry[0], dict2[entry[0]], len(entry[1]))
     text_offset_2_offset = max(
         0, text_offset_1_address + text_offset_1_offset + len(compact_table1) - text_offset_2_address
     )
