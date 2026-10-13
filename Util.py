@@ -18,7 +18,7 @@ def build_item_name_to_id_dict(data: dict[str, dict[str, Any]]) -> dict[str, int
     item_name_to_id: dict[str, int] = {}
     for item_name, item in data.items():
         index = item["id"] * 0x100 + (item["subid"] if "subid" in item else 0)
-        item_name_to_id[item_name] = index
+        item_name_to_id[str(item_name)] = index
     return item_name_to_id
 
 
@@ -26,5 +26,5 @@ def build_item_id_to_name_dict(data: dict[str, dict[str, Any]]) -> dict[int, str
     item_id_to_name: dict[int, str] = {}
     for item_name, item in data.items():
         index = item["id"] * 0x100 + (item["subid"] if "subid" in item else 0)
-        item_id_to_name[index] = item_name
+        item_id_to_name[index] = str(item_name)
     return item_id_to_name
