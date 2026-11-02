@@ -10,7 +10,7 @@ def build_location_name_to_id_dict(data: dict[str, dict[str, Any]]) -> dict[str,
             index = location["flag_byte"] * 0x100 + (location["bit_mask"] if "bit_mask" in location else 0x20)
         else:
             continue
-        location_name_to_id[loc_name] = index
+        location_name_to_id[str(loc_name)] = index
     return location_name_to_id
 
 
